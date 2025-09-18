@@ -1,7 +1,7 @@
 
 # On the Variability of TCAV
 
-A clean, working scaffold for TCAV-style analyses across images (ready), with your **variability plot** (trace variance) and consistent styling, plus **caching** to avoid recomputing.
+We provide notebooks and a clean framework to explore the variability of TCAV on four diffrent datasets. 
 
 ## Layout
 ```
@@ -22,7 +22,7 @@ tcavlab_ready/
 ```
 
 ## How to run
-1. Unzip so `notebooks/` and `src/` sit side by side.
+1. Clone this repository with `git clone https://github.com/juliawenkmann/variability-of-tcav`.
 2. Open `notebooks/01_images.ipynb`.
 3. Update the three data folders under the config cell:
    - `concepts_root / striped, zigzagged, dotted`
@@ -34,7 +34,7 @@ tcavlab_ready/
 > Analyses and plots are cached under: `artifacts/images/cache/…`
 
 ## Notes
-- Variability uses **your definition** (trace variance across CAV vectors) and your font sizes (title 38, labels 40, ticks 30, legend 34/30) with a **1/N + b** fit.
+- Variability uses our definition of variability (trace variance across CAV vectors) and with a **1/N + b** fit.
 - `plot_variance_vs_n(...)` is an alias of `plot_stability_vs_n(...)` to match any older code.
 - Parallel CAV training uses `joblib.delayed(...)` to avoid unpacking errors.
 
