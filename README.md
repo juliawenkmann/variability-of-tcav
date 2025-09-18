@@ -22,13 +22,14 @@ tcavlab_ready/
 ```
 
 ## How to run
-1. Clone this repository with `git clone https://github.com/juliawenkmann/variability-of-tcav`.
-2. Open `notebooks/01_images.ipynb`.
-3. Update the three data folders under the config cell:
+1. Clone this repository with:
+   ````git clone https://github.com/juliawenkmann/variability-of-tcav```.
+3. Open `notebooks/01_images.ipynb`.
+4. Update the three data folders under the config cell:
    - `concepts_root / striped, zigzagged, dotted`
    - `random_dir`
    - `class_dir` (target class, e.g. zebra)
-4. Run all cells.
+5. Run all cells.
 
 > The notebook saves CAVs under: `artifacts/images/{layer}/{concept}/{n}/run_{i}.pkl`
 > Analyses and plots are cached under: `artifacts/images/cache/…`
