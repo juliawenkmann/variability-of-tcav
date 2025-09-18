@@ -22,8 +22,7 @@ tcavlab_ready/
 ```
 
 ## How to run
-1. Clone this repository with:
-   ````git clone https://github.com/juliawenkmann/variability-of-tcav```.
+1. Clone this repository with: ```git clone https://github.com/juliawenkmann/variability-of-tcav```.
 3. Open `notebooks/01_images.ipynb`.
 4. Update the three data folders under the config cell:
    - `concepts_root / striped, zigzagged, dotted`
