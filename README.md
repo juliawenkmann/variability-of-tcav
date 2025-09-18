@@ -1,5 +1,5 @@
 
-# tcavlab (ready)
+# On the Variability of TCAV
 
 A clean, working scaffold for TCAV-style analyses across images (ready), with your **variability plot** (trace variance) and consistent styling, plus **caching** to avoid recomputing.
 
