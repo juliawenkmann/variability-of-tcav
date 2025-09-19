@@ -3,8 +3,9 @@ from typing import Optional, List, Tuple, Dict
 import os, numpy as np, pandas as pd, seaborn as sns, matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter, LogLocator, LogFormatterSciNotation
 from scipy.optimize import curve_fit
-
+from sklearn.decomposition import PCA
 from .cache import save_plot_bundle, load_plot_bundle
+import torch
 
 TITLE_F = 50; LABEL_F = 50; TICK_F = 40; LEGEND_TITLE_F = 45; LEGEND_F = 40  # a bit larger
 
@@ -98,9 +99,11 @@ def plot_stability_vs_n(
     save_bundle: bool = True,
     band: str = "sd",
     conf: float = 0.68, qlo: float = 0.16, qhi: float = 0.84,
-    xtick_every: int = 2,          # <-- NEW: show every k-th x tick
-    ytick_every: Optional[int] = None,  # <-- NEW: thin y tick labels (optional)
-    legend_out: bool = False,       # <-- NEW: move legend outside to avoid overlap
+    xtick_every: int = 2,          
+    ytick_every: Optional[int] = None,  
+    legend_out: bool = False,
+    showfit: bool = True,    
+    showlabel: bool = False   
 ):
     if df is None or df.empty:
         print(f"Could not generate plot for layer '{layer}' because no data was provided.")
@@ -164,8 +167,13 @@ def plot_stability_vs_n(
         a_fit, b_fit = popt
         x_smooth = np.linspace(d["n"].min(), d["n"].max(), 300)
         y_smooth = one_over_n_curve(x_smooth, a_fit, b_fit)
-        ax.plot(x_smooth, y_smooth, linestyle="--", linewidth=3.0, label=_fit_label_tex(a_fit, b_fit, successful_threshold),
-                color="gray", zorder=1)
+        print(_fit_label_tex(a_fit, b_fit, successful_threshold))
+        if showfit and showlabel:
+            ax.plot(x_smooth, y_smooth, linestyle="--", linewidth=3.0, label=_fit_label_tex(a_fit, b_fit, successful_threshold),
+                    color="gray", zorder=1)
+        if showfit and not showlabel:
+            ax.plot(x_smooth, y_smooth, linestyle="--", linewidth=3.0,
+                    color="gray", zorder=1)
 
     # axes styling (big + readable)
     ax.set_yscale(yscale); ax.set_xscale(xscale)
@@ -242,3 +250,75 @@ def plot_tcav_score_variance(
         cache_dir=cache_dir, cache_key=cache_key or f"tcav_score_variance__{layer_name}",
         load_if_exists=load_if_exists, save_bundle=save_bundle, **kwargs
     )
+
+
+
+def _to_numpy_2d(a) -> np.ndarray:
+    """Accept torch.Tensor or np.ndarray; return a 2D numpy array (n, d)."""
+    if isinstance(a, torch.Tensor):
+        a = a.detach().cpu().numpy()
+    else:
+        a = np.asarray(a)
+    if a.ndim == 1:
+        a = a.reshape(-1, 1)
+    elif a.ndim > 2:
+        a = a.reshape(a.shape[0], -1)
+    return a
+
+def plot_pca_projection(data_tensor, concept_name: str):
+    """
+    Reduces data to 2D using PCA and creates a scatter plot with large fonts.
+    Accepts either torch.Tensor or np.ndarray of shape (n, d).
+    """
+    data_np = _to_numpy_2d(data_tensor)
+
+    # 1) Fit PCA and transform the data
+    pca = PCA(n_components=2)
+    data_2d = pca.fit_transform(data_np)
+
+    # 2) Transform the mean
+    mean_vec = data_np.mean(axis=0, keepdims=True)
+    mean_2d = pca.transform(mean_vec)
+
+    # 3) Create the plot
+    sns.set_theme(style="whitegrid")
+    plt.figure(figsize=(12, 8))
+
+    # Scatter of points
+    sns.scatterplot(x=data_2d[:, 0], y=data_2d[:, 1],
+                    alpha=0.7, label=f'{concept_name} Data Points')
+
+    # Mean marker
+    plt.scatter(mean_2d[0, 0], mean_2d[0, 1], marker='X',
+                s=400, edgecolor='red', facecolor='red', linewidth=2, zorder=5,
+                label='Mean of Data')
+
+    # Labels & style
+    plt.title(f"PCA Projection of '{concept_name}' Concept Embeddings", fontsize=30)
+    plt.xlabel("Principal Component 1", fontsize=25)
+    plt.ylabel("Principal Component 2", fontsize=25)
+    plt.legend(fontsize=20)
+    plt.tick_params(axis='both', which='major', labelsize=20)
+
+    plt.axhline(y=mean_2d[0, 1], color='gray', linestyle='--', alpha=0.5)
+    plt.axvline(x=mean_2d[0, 0], color='gray', linestyle='--', alpha=0.5)
+    plt.grid(True, linestyle=':', alpha=0.6)
+    plt.savefig(f"pca_projection_{concept_name.lower().replace(' ', '_')}.pdf", bbox_inches="tight")
+    plt.show()
+
+
+def plot_surround_assumption(proportions, min_prop, delta, label, bins=40):
+    p = np.asarray(proportions, dtype=float).ravel()
+    sns.set_theme(style="whitegrid")
+    plt.figure(figsize=(12, 8))
+    sns.histplot(p, bins=bins, alpha=0.9)
+    plt.axvline(min_prop, linestyle='--', linewidth=3.0, label=f"min={min_prop:.3f}")
+    plt.axvline(float(delta), linestyle='--', linewidth=3.0, label=f"delta={float(delta):.3f}")
+    plt.title(f"Surround Proportions — {label}", fontsize=30)
+    plt.xlabel("Proportion of samples with dot(x-mean, ω) > ε", fontsize=25)
+    plt.ylabel("Count", fontsize=25)
+    plt.legend(fontsize=18)
+    plt.tick_params(axis='both', which='major', labelsize=20)
+    plt.grid(True, linestyle=':', alpha=0.6)
+    plt.savefig(f"surround_hist_{str(label).lower().replace(' ', '_')}.pdf", bbox_inches="tight")
+    plt.show()

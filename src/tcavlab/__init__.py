@@ -4,6 +4,7 @@ from .cav import Concept, train_cav, sample_train_cav, method_names
 from .activations import TorchModelWrapper, get_activations_from_tensor, get_gradient_at_layer
 from .metrics import cav_pairwise_mean_angle_deg, sensitivity_from_grad_and_cav, tcav_score_from_grads_and_cavs
 from .plots import plot_variance_vs_n, plot_tcav_score_variance
+from .assumptions import check_surround_assumption
 from .runners import (
     precompute_cavs_for_layer,
     cav_variability_analysis, sensitivity_variance_analysis, tcav_score_variance_analysis,
